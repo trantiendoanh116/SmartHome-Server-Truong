@@ -1,0 +1,74 @@
+<div class="scrollable">
+	<div class="scrollable-content">
+		<div class="list-group text-center">
+			<!-- cục giới thiệu -->
+			<div class="list-group-item list-group-item-home">
+				<h1>Smart Home</small>
+				</h1>
+			</div>
+			<!-- Status LED-->
+
+			<div class="list-group-item list-group-item-home">
+				<div>
+					<i class="fa fa-tachometer feature-icon  text-primary"></i>
+				</div>
+				<div>
+					<h3 class="home-heading">TRẠNG THÁI ĐÈN</h3>
+					<div>Đèn phòng khách:    {{led_status ? "ON" : "OFF"}}
+						<button ng-click="ledClick()" type="button">ON/OFF</button></div>
+					<div>Đèn trang trí:     {{led_status_1 ? "ON" : "OFF"}}
+						<button ng-click="ledClick1()" type="button">ON/OFF</button></div>
+
+				</div>
+
+			</div>
+			<!-- -->
+			<!-- Status FAN-->
+
+			<div class="list-group-item list-group-item-home">
+				<div>
+					<i class="fa fa-tachometer feature-icon  text-primary"></i>
+				</div>
+				<div>
+					<h3 class="home-heading">TRẠNG THÁI QUẠT TRẦN</h3>
+					<div ng-repeat="fan_value in fan_status  track by $index">
+						Tốc Độ Số {{$index+1}} : {{fan_value ? "ON" : "OFF"}}
+					</div>
+				</div>
+				<button ng-click="onFanClick()" type="button" class="button">ON</button>
+				<button ng-click="offFanClick()" type="button" class="button">OFF</button>
+			</div>
+			<!-- -->
+			<div class="list-group-item list-group-item-home">
+				<div>
+					<i class="fa fa-tachometer feature-icon  text-primary"></i>
+				</div>
+				<div>
+					<h3 class="home-heading">TRẠNG THÁI APTOMAT</h3>
+					<div>
+						Aptomat Tổng : {{apt_status ? "ON" : "OFF"}}
+						<button ng-click="atomatClick()" type="button">ON/OFF</button>
+					</div>
+				</div>
+			</div>
+
+			<!-- -->
+			<div class="list-group-item list-group-item-home">
+				<div>
+					<i class="fa fa-tachometer feature-icon  text-primary"></i>
+				</div>
+				<h3>
+					Nhiệt độ : {{temp}}
+				</h3>
+				<h3>
+					Độ ẩm : {{humi}}
+				</h3>
+				<h3>
+					Khí CO : {{co}}
+				</h3>
+
+			</div>
+
+		</div>
+	</div>
+</div>
