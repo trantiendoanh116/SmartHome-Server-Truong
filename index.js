@@ -153,6 +153,15 @@ esp8266_nsp.on('connection', function (socket) {
     console.log("Disconnect socket esp8266")
   });
 
+  var interval1 = setInterval(function() {
+	
+    //Cài đặt chuỗi JSON, tên biến JSON này là json 
+    var json = {};
+    json["F1_D01"] = "change";
+		esp8266_nsp.emit("CONTROL", json) //Gửi lệnh LED với các tham số của của chuỗi JSON
+		console.log("Change LED")//Ghi ra console.log là đã gửi lệnh LED
+	}, 4000)//1000ms
+
 
   socket.on("*", function (packet) {
     console.log("Esp8266 send to webapp/android packet: ", packet.data)
