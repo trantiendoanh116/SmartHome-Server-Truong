@@ -17,6 +17,7 @@ var io = socketio(server);
 //Tạo namespace để phân biêt SocketClient trên Esp, webapp, AndroidApp
 var webapp_nsp = io.of('/webapp')
 var android_nsp = io.of('/android')
+var android_bckg_nsp = io.of('/android_bckg')
 var esp8266_nsp = io.of('/esp8266')
 
 
@@ -24,6 +25,7 @@ var middleware = require('socketio-wildcard')();
 esp8266_nsp.use(middleware);
 webapp_nsp.use(middleware);
 android_nsp.use(middleware);
+android_bckg_nsp.use(middleware);
 
 
 server.listen(process.env.PORT || PORT);
@@ -174,6 +176,7 @@ esp8266_nsp.on('connection', function (socket) {
     var eventJson = packet.data[1] || {}
     webapp_nsp.emit(eventName, eventJson) //gửi toàn bộ lệnh + json đến webapp
     android_nsp.emit(eventName, eventJson) //gửi toàn bộ lệnh + json đến webapp
+    android_bckg_nsp.emit(eventName, eventJson);
   });
 });
 
@@ -216,4 +219,17 @@ android_nsp.on('connection', function (socket) {
     var eventJson = packet.data[1] || {}
     esp8266_nsp.emit(eventName, eventJson)
   });
+});
+//Bắt các sự kiện socket.io của service app
+android_bckg_nsp.on('connection', function (socket) {
+
+  console.log('Socket service connected')
+  var eventJsonInit = {}
+  eventJsonInit["init"] = true;
+  esp8266_nsp.emit("CONTROL", eventJsonInit);
+  console.log("Socket service send to esp8266 packet: ", eventJsonInit)
+  socket.on('disconnect', function () {
+    console.log("Disconnect socket service")
+  })
+
 });
