@@ -202,10 +202,10 @@ webapp_nsp.on('connection', function (socket) {
 android_nsp.on('connection', function (socket) {
 
   console.log('Android app connected')
-  var eventJsonInit = {}
-  eventJsonInit["init"] = true;
-  esp8266_nsp.emit("CONTROL", eventJsonInit);
-  console.log("Android app send to esp8266 packet: ", eventJsonInit)
+  // var eventJsonInit = {}
+  // eventJsonInit["init"] = true;
+  // esp8266_nsp.emit("CONTROL", eventJsonInit);
+  // console.log("Android app send to esp8266 packet: ", eventJsonInit)
   socket.on('disconnect', function () {
     console.log("Disconnect socket Android app")
   })
