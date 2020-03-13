@@ -174,7 +174,10 @@ esp8266_nsp.on('connection', function (socket) {
 
 ios_nsp.on('connection', function (socket) {
   console.log('Socket iOS app connected')
-
+  var eventJsonInit = {}
+  eventJsonInit["init"] = true;
+  esp8266_nsp.emit("CONTROL", eventJsonInit);
+  
   socket.on('disconnect', function () {
     console.log("Disconnect socket iOS app")
   })
