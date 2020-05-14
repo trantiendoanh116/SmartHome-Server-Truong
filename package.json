@@ -1,5 +1,5 @@
 {
-  "name": "socketServer1",
+  "name": "SmartHome",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -17,9 +17,12 @@
     "socketio-wildcard": "^0.3.0",
     "ip": "^1.1.4"
   },
+  "devDependencies": {
+    "nodemon": "^1.18.8"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node index.js"
+    "devstart": "nodemon index.js"
   },
   "author": "",
   "license": "ISC"
