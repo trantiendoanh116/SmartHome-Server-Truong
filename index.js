@@ -16,7 +16,7 @@ var authorizeCookie = require('./middlewares/authentication').cookie;
 var app = express();
 var server = http.Server(app)
 var ip = require('ip');
-
+  
 var io = socketio(server);
 //Tạo namespace để phân biêt SocketClient trên Esp, webapp, AndroidApp
 var esp8266_nsp = io.of('/esp8266')
@@ -113,18 +113,25 @@ router.post('/logout', (req, res) => {
 
 //-------------API------------------//
 router.post('/device/control', (req, res) =>{
+  if(socketEsp8266 != undefined && socketEsp8266.connected){
     var data = req.body;
+    console.log(data);
     esp8266_nsp.emit('CONTROL', data);
     return res.sendStatus(201);
+  }else{
+    console.log('ESP8266 disconnect');
+    return res.sendStatus(400);
+  }
 });
 
-
+var socketEsp8266;
 ////Bắt các sự kiện từ ESP8266
 esp8266_nsp.on('connection', function (socket) {
   console.log('Socket ESP8266 connected')
-
+  socketEsp8266 = socket;
   socket.on('disconnect', function () {
     console.log("Disconnect socket ESP8266")
+    socketEsp8266 = undefined
   });
 
   socket.on("*", function (packet) {
@@ -137,4 +144,5 @@ esp8266_nsp.on('connection', function (socket) {
     })
   });
 });
+
 
