@@ -10,6 +10,8 @@ var socketio = require('socket.io')
 var firebaseAdmin = require('./firebase_admin')
 const db = firebaseAdmin.firestore();
 
+var authorizeCookie = require('./middlewares/authentication').cookie; 
+
 
 var app = express();
 var server = http.Server(app)
@@ -17,17 +19,9 @@ var ip = require('ip');
 
 var io = socketio(server);
 //Tạo namespace để phân biêt SocketClient trên Esp, webapp, AndroidApp
-var ios_nsp = io.of('/ios')
-var android_nsp = io.of('/android')
-var android_bckg_nsp = io.of('/android_bckg')
 var esp8266_nsp = io.of('/esp8266')
-
-
 var middleware = require('socketio-wildcard')();
 esp8266_nsp.use(middleware);
-ios_nsp.use(middleware);
-android_nsp.use(middleware);
-android_bckg_nsp.use(middleware);
 
 
 server.listen(process.env.PORT || PORT);
@@ -48,17 +42,8 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 app.use('/', router)
 
-router.get('/home', function (req, res) {
-  checkAuth(req, function (authenticated) {
-    if (authenticated) {
-      res.sendFile(path.join(__dirname + '/public/html/index.html'));
-    } else {
-
-      res.redirect('/login');
-    }
-  });
-
-
+router.get('/home', authorizeCookie,function (req, res) {
+  res.sendFile(path.join(__dirname + '/public/html/index.html'));
 });
 
 router.get('/', function (req, res) {
@@ -71,26 +56,18 @@ router.get('/ping', function (req, res) {
 });
 
 router.get('/login', function (req, res) {
-  checkAuth(req, function (authenticated) {
-    if (authenticated) {
+  const authtoken = req.cookies.authtoken || '';
+  firebaseAdmin.auth().verifySessionCookie(authtoken, true)
+    .then((decodedClaims) => {
       res.redirect('/user');
-    } else {
+    }).catch(() => {
       res.sendFile(path.join(__dirname + '/public/html/login.html'));
-    }
-  });
-
-
+    });
 
 });
 
-router.get('/user', function (req, res) {
-  checkAuth(req, function (authenticated) {
-    if (authenticated) {
-      res.sendFile(path.join(__dirname + '/public/html/user.html'));
-    } else {
-      res.redirect('/login');
-    }
-  });
+router.get('/user',authorizeCookie ,function (req, res) {
+  res.sendFile(path.join(__dirname + '/public/html/user.html'));
 
 });
 
@@ -134,19 +111,12 @@ router.post('/logout', (req, res) => {
     });
 });
 
-function checkAuth(req, callback) {
-  const authtoken = req.cookies.authtoken || '';
-  //console.info("cookies ->" + req.cookies)
-  firebaseAdmin.auth().verifySessionCookie(authtoken, true)
-    .then((decodedClaims) => {
-      console.info("Authenticated")
-      callback(true)
-    }).catch(() => {
-      console.info("Not authenticated")
-      callback(false)
-    });
-
-}
+//-------------API------------------//
+router.post('/device/control', (req, res) =>{
+    var data = req.body;
+    esp8266_nsp.emit('CONTROL', data);
+    return res.sendStatus(201);
+});
 
 
 ////Bắt các sự kiện từ ESP8266
@@ -168,51 +138,3 @@ esp8266_nsp.on('connection', function (socket) {
   });
 });
 
-//Bắt các sự kiện từ iOS
-
-ios_nsp.on('connection', function (socket) {
-  console.log('Socket iOS app connected')
-  var eventJsonInit = {}
-  eventJsonInit["init"] = true;
-  esp8266_nsp.emit("CONTROL", eventJsonInit);
-  
-  socket.on('disconnect', function () {
-    console.log("Disconnect socket iOS app")
-  })
-
-  socket.on('*', function (packet) {
-    console.log("iOS app send to ESP8266 : ", packet.data)
-    var eventName = packet.data[0]
-    var eventJson = packet.data[1] || {}
-    esp8266_nsp.emit(eventName, eventJson)
-  });
-});
-//Bắt các sự kiện từ android app
-android_nsp.on('connection', function (socket) {
-
-  console.log('Android app connected')
-
-  socket.on('disconnect', function () {
-    console.log("Disconnect socket Android app")
-  })
-
-  socket.on('*', function (packet) {
-    console.log("Android app send to esp8266 : ", packet.data)
-    var eventName = packet.data[0]
-    var eventJson = packet.data[1] || {}
-    esp8266_nsp.emit(eventName, eventJson)
-  });
-});
-//Bắt các sự kiện socket.io của service app
-android_bckg_nsp.on('connection', function (socket) {
-
-  console.log('Socket Android service connected')
-  var eventJsonInit = {}
-  eventJsonInit["init"] = true;
-  esp8266_nsp.emit("CONTROL", eventJsonInit);
-  console.log("Socket Android service send to esp8266: ", eventJsonInit)
-  socket.on('disconnect', function () {
-    console.log("Disconnect socket Android service")
-  })
-
-});
