@@ -10,13 +10,13 @@ var socketio = require('socket.io')
 var firebaseAdmin = require('./firebase_admin')
 const db = firebaseAdmin.firestore();
 
-var authorizeCookie = require('./middlewares/authentication').cookie; 
+var authorizeCookie = require('./middlewares/authentication').cookie;
 
 
 var app = express();
 var server = http.Server(app)
 var ip = require('ip');
-  
+
 var io = socketio(server);
 //Tạo namespace để phân biêt SocketClient trên Esp, webapp, AndroidApp
 var esp8266_nsp = io.of('/esp8266')
@@ -42,7 +42,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 app.use('/', router)
 
-router.get('/home', authorizeCookie,function (req, res) {
+router.get('/home', authorizeCookie, function (req, res) {
   res.sendFile(path.join(__dirname + '/public/html/index.html'));
 });
 
@@ -66,7 +66,7 @@ router.get('/login', function (req, res) {
 
 });
 
-router.get('/user',authorizeCookie ,function (req, res) {
+router.get('/user', authorizeCookie, function (req, res) {
   res.sendFile(path.join(__dirname + '/public/html/user.html'));
 
 });
@@ -112,13 +112,13 @@ router.post('/logout', (req, res) => {
 });
 
 //-------------API------------------//
-router.post('/device/control', (req, res) =>{
-  if(socketEsp8266 != undefined && socketEsp8266.connected){
-    var data = req.body;
-    console.log(data);
+router.post('/device/control', (req, res) => {
+  var data = req.body;
+  console.log(data);
+  if (socketEsp8266 != undefined && socketEsp8266.connected) {
     esp8266_nsp.emit('CONTROL', data);
     return res.sendStatus(201);
-  }else{
+  } else {
     console.log('ESP8266 disconnect');
     return res.sendStatus(400);
   }
@@ -135,14 +135,35 @@ esp8266_nsp.on('connection', function (socket) {
   });
 
   socket.on("*", function (packet) {
-    console.log("ESP8266 send to server: ", packet.data)
-    var eventJson = packet.data[1] || {}
-    db.collection('smarthome-116').doc('tientruong').update(eventJson).then(response => {
-      //console.log(response);
-    }).catch(error =>{
-      console.log(error);
-    })
+    console.log('ESP8266 send to server: ', packet.data)
+    var data = packet.data[1] || {}
+    var deviceId = packet.data[0] || ''
+    console.log('DeviceId = ' + deviceId + ', data = ' + JSON.stringify(data));
+    if (data != {} && deviceId != '') {
+      let collection;
+      if (DEVICES.indexOf(deviceId) > -1) {
+        collection = COLLECTION_DEIVICES;
+      } else if (SENSORS.indexOf(deviceId) > -1) {
+        collection = COLLECTION_SENSOR;
+      }else{
+        collection = '';
+        console.error('DeviceId not found, data = ' + JSON.stringify(packet.data) );
+      }
+      if (collection !== '') {
+        db.collection(collection).doc(deviceId).update(data).then(response => {
+          //console.log(response);
+        }).catch(error => {
+          console.log(error);
+        });
+        //console.log('send to firebase');
+      }
+    }
   });
 });
+
+const COLLECTION_DEIVICES = 'devices';
+const COLLECTION_SENSOR = 'sensors';
+const DEVICES = ['F1_D01', 'F1_D02', 'F1_D03', 'F1_D04', 'F1_D05', 'F1_D06', 'F1_D07', 'F1_D08', 'F1_D09', 'F1_D10', 'F1_D11', 'F1_D12', 'F1_D13', 'F1_D14', 'F1_D14', 'F1_D16', 'F1_D18', 'F1_D19'];
+const SENSORS = ['F1_S01', 'F1_S02', 'F1_S03', 'F1_S04']
 
 
