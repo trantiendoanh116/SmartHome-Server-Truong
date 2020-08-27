@@ -145,9 +145,9 @@ esp8266_nsp.on('connection', function (socket) {
         collection = COLLECTION_DEIVICES;
       } else if (SENSORS.indexOf(deviceId) > -1) {
         collection = COLLECTION_SENSOR;
-      }else{
+      } else {
         collection = '';
-        console.error('DeviceId not found, data = ' + JSON.stringify(packet.data) );
+        console.error('DeviceId not found, data = ' + JSON.stringify(packet.data));
       }
       if (collection !== '') {
         db.collection(collection).doc(deviceId).update(data).then(response => {
